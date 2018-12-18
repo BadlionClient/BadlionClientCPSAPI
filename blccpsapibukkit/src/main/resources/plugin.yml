@@ -1,0 +1,4 @@
+name: BadlionClientCPSAPI
+main: net.badlion.blccpsapibukkit.BlcCpsApiBukkit
+version: 1.0
+author: Badlion
