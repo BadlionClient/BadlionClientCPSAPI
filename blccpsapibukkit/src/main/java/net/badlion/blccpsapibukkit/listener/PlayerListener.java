@@ -1,7 +1,6 @@
 package net.badlion.blccpsapibukkit.listener;
 
 import net.badlion.blccpsapibukkit.BlcCpsApiBukkit;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,33 +17,25 @@ public class PlayerListener implements Listener {
     private BlcCpsApiBukkit plugin;
     private String versionSuffix;
 
-    // Reflection stuff
-    private Class<?> craftPlayerClass;
-    private Method getHandleMethod;
+	private Method getHandleMethod;
 
-    private Class<?> nmsPlayerClass;
-    private Field playerConnectionField;
+	private Field playerConnectionField;
 
-    private Class<?> playerConnectionClass;
-    private Method sendPacketMethod;
+	private Method sendPacketMethod;
 
-    private Class<?> packetPlayOutCustomPayloadClass;
-    private Constructor<?> packetPlayOutCustomPayloadConstructor;
+	private Constructor<?> packetPlayOutCustomPayloadConstructor;
 
     // Bukkit 1.8+ support
     private Class<?> packetDataSerializerClass;
     private Constructor<?> packetDataSerializerConstructor;
 
-    // Netty classes used by newer 1.8 and newer
-    private Class<?> byteBufClass;
-    private Class<?> unpooledClass;
-    private Method wrappedBufferMethod;
+	private Method wrappedBufferMethod;
 
     public PlayerListener(BlcCpsApiBukkit plugin) {
         this.plugin = plugin;
 
         // Get the v1_X_Y from the end of the package name, e.g. v_1_7_R4 or v_1_12_R1
-        String packageName = Bukkit.getServer().getClass().getPackage().getName();
+        String packageName = plugin.getServer().getClass().getPackage().getName();
         String[] parts = packageName.split("\\.");
 
         if (parts.length > 0) {
@@ -59,27 +50,28 @@ public class PlayerListener implements Listener {
         }
 
         // We need to use reflection because Bukkit by default handles plugin messages in a really silly way
-        this.craftPlayerClass = this.getClass("org.bukkit.craftbukkit." + this.versionSuffix + ".entity.CraftPlayer");
-        if (this.craftPlayerClass == null) {
+	    // Reflection stuff
+	    Class<?> craftPlayerClass = this.getClass("org.bukkit.craftbukkit." + this.versionSuffix + ".entity.CraftPlayer");
+        if (craftPlayerClass == null) {
             throw new RuntimeException("Failed to find CraftPlayer class");
         }
 
-        this.nmsPlayerClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".EntityPlayer");
-        if (this.nmsPlayerClass == null) {
+	    Class<?> nmsPlayerClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".EntityPlayer");
+        if (nmsPlayerClass == null) {
             throw new RuntimeException("Failed to find EntityPlayer class");
         }
 
-        this.playerConnectionClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".PlayerConnection");
-        if (this.playerConnectionClass == null) {
+	    Class<?> playerConnectionClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".PlayerConnection");
+        if (playerConnectionClass == null) {
             throw new RuntimeException("Failed to find PlayerConnection class");
         }
 
-        this.packetPlayOutCustomPayloadClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".PacketPlayOutCustomPayload");
-        if (this.packetPlayOutCustomPayloadClass == null) {
+	    Class<?> packetPlayOutCustomPayloadClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".PacketPlayOutCustomPayload");
+        if (packetPlayOutCustomPayloadClass == null) {
             throw new RuntimeException("Failed to find PacketPlayOutCustomPayload class");
         }
 
-        this.packetPlayOutCustomPayloadConstructor = this.getConstructor(this.packetPlayOutCustomPayloadClass, String.class, byte[].class);
+        this.packetPlayOutCustomPayloadConstructor = this.getConstructor(packetPlayOutCustomPayloadClass, String.class, byte[].class);
         if (this.packetPlayOutCustomPayloadConstructor == null) {
             // Newer versions of Minecraft use a different custom packet system
             this.packetDataSerializerClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".PacketDataSerializer");
@@ -87,44 +79,45 @@ public class PlayerListener implements Listener {
                 throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or PacketDataSerializer class");
             }
 
-            this.byteBufClass = this.getClass("io.netty.buffer.ByteBuf");
-            if (this.byteBufClass == null) {
+	        // Netty classes used by newer 1.8 and newer
+	        Class<?> byteBufClass = this.getClass("io.netty.buffer.ByteBuf");
+            if (byteBufClass == null) {
                 throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or ByteBuf class");
             }
 
-            this.packetDataSerializerConstructor = this.getConstructor(this.packetDataSerializerClass, this.byteBufClass);
+            this.packetDataSerializerConstructor = this.getConstructor(this.packetDataSerializerClass, byteBufClass);
             if (this.packetDataSerializerConstructor == null) {
                 throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or PacketDataSerializer constructor");
             }
 
-            this.unpooledClass = this.getClass("io.netty.buffer.Unpooled");
-            if (this.unpooledClass == null) {
+	        Class<?> unpooledClass = this.getClass("io.netty.buffer.Unpooled");
+            if (unpooledClass == null) {
                 throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or Unpooled class");
             }
 
-            this.wrappedBufferMethod = this.getMethod(this.unpooledClass, "wrappedBuffer", byte[].class);
+            this.wrappedBufferMethod = this.getMethod(unpooledClass, "wrappedBuffer", byte[].class);
             if (this.wrappedBufferMethod == null) {
                 throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or wrappedBuffer()");
             }
 
             // If we made it this far in theory we are on at least 1.8
-            this.packetPlayOutCustomPayloadConstructor = this.getConstructor(this.packetPlayOutCustomPayloadClass, String.class, this.packetDataSerializerClass);
+            this.packetPlayOutCustomPayloadConstructor = this.getConstructor(packetPlayOutCustomPayloadClass, String.class, this.packetDataSerializerClass);
             if (this.packetPlayOutCustomPayloadConstructor == null) {
                 throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor 2x");
             }
         }
 
-        this.getHandleMethod = this.getMethod(this.craftPlayerClass, "getHandle");
+        this.getHandleMethod = this.getMethod(craftPlayerClass, "getHandle");
         if (this.getHandleMethod == null) {
             throw new RuntimeException("Failed to find CraftPlayer.getHandle()");
         }
 
-        this.playerConnectionField = this.getField(this.nmsPlayerClass, "playerConnection");
+        this.playerConnectionField = this.getField(nmsPlayerClass, "playerConnection");
         if (this.playerConnectionField == null) {
             throw new RuntimeException("Failed to find EntityPlayer.playerConnection");
         }
 
-        this.sendPacketMethod = this.getMethod(this.playerConnectionClass, "sendPacket");
+        this.sendPacketMethod = this.getMethod(playerConnectionClass, "sendPacket");
         if (this.sendPacketMethod == null) {
             throw new RuntimeException("Failed to find PlayerConnection.sendPacket()");
         }
@@ -143,7 +136,7 @@ public class PlayerListener implements Listener {
 
             // Newer MC version, setup ByteBuf object
             if (this.packetDataSerializerClass != null) {
-                Object byteBuf = this.wrappedBufferMethod.invoke(null, message);
+                Object byteBuf = this.wrappedBufferMethod.invoke(null, (Object) message);
                 Object packetDataSerializer = this.packetDataSerializerConstructor.newInstance(byteBuf);
 
                 packet = this.packetPlayOutCustomPayloadConstructor.newInstance(channel, packetDataSerializer);
@@ -168,7 +161,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    public Class<?> getClass(String className) {
+    private Class<?> getClass(String className) {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
@@ -176,7 +169,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    public Constructor<?> getConstructor(Class<?> clazz, Class<?> ...params) {
+    private Constructor<?> getConstructor(Class<?> clazz, Class<?>... params) {
         for (final Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             if (Arrays.equals(constructor.getParameterTypes(), params)) {
                 constructor.setAccessible(true);
@@ -187,7 +180,7 @@ public class PlayerListener implements Listener {
         return null;
     }
 
-    public Method getMethod(Class<?> clazz, String methodName, Class<?>... params) {
+    private Method getMethod(Class<?> clazz, String methodName, Class<?>... params) {
         for (final Method method : clazz.getDeclaredMethods()) {
             if (method.getName().equals(methodName)) {
                 if (params.length > 0) {
@@ -205,7 +198,7 @@ public class PlayerListener implements Listener {
         return null;
     }
 
-    public Field getField(Class<?> clazz, String fieldName) {
+    private Field getField(Class<?> clazz, String fieldName) {
         for (final Field field : clazz.getDeclaredFields()) {
             if (field.getName().equals(fieldName)) {
                 field.setAccessible(true);

@@ -5,19 +5,17 @@ import com.google.gson.GsonBuilder;
 import net.badlion.blccpsapibungee.listener.PlayerListener;
 import net.md_5.bungee.api.plugin.Plugin;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.logging.Level;
 
 public class BlcCpsApiBungee extends Plugin {
 
 	public static final Gson GSON_NON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().create();
-	public static final Gson GSON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().setPrettyPrinting().create();
+	private static final Gson GSON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().setPrettyPrinting().create();
 
 	private Conf conf;
 
@@ -36,7 +34,7 @@ public class BlcCpsApiBungee extends Plugin {
 			this.getProxy().getPluginManager().registerListener(this, new PlayerListener(this));
 
 			this.getLogger().log(Level.INFO, "Successfully setup BadlionClientCPSAPI plugin.");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			this.getLogger().log(Level.SEVERE, "Error with config for BadlionClientCPSAPI plugin.");
 			e.printStackTrace();
 		}
@@ -47,20 +45,22 @@ public class BlcCpsApiBungee extends Plugin {
 
 	}
 
-	public Conf loadConf(File file) throws IOException {
-		try (Reader reader = new BufferedReader(new FileReader(file))) {
-			return BlcCpsApiBungee.GSON_NON_PRETTY.fromJson(reader, Conf.class);
+	private Conf loadConf(File file) throws IOException {
+
+		try (FileReader fileReader = new FileReader(file)) {
+			return BlcCpsApiBungee.GSON_NON_PRETTY.fromJson(fileReader, Conf.class);
 		} catch (FileNotFoundException ex) {
-			this.getLogger().log(Level.INFO,"No Config Found: Saving default...");
+			this.getLogger().log(Level.INFO, "No Config Found: Saving default...");
 			Conf conf = new Conf();
-			this.saveConf(conf, new File(this.getDataFolder(), "config.json"));
+			this.saveConf(conf, file);
 			return conf;
 		}
 	}
 
 	private void saveConf(Conf conf, File file) {
-		try (FileWriter writer = new FileWriter(file)) {
-			BlcCpsApiBungee.GSON_PRETTY.toJson(conf, writer);
+
+		try (FileWriter fileWriter = new FileWriter(file)) {
+			BlcCpsApiBungee.GSON_PRETTY.toJson(conf, fileWriter);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

@@ -5,19 +5,17 @@ import com.google.gson.GsonBuilder;
 import net.badlion.blccpsapibukkit.listener.PlayerListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.logging.Level;
 
 public class BlcCpsApiBukkit extends JavaPlugin {
 
     public static final Gson GSON_NON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().create();
-    public static final Gson GSON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().setPrettyPrinting().create();
+    private static final Gson GSON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().setPrettyPrinting().create();
 
     private Conf conf;
 
@@ -46,9 +44,8 @@ public class BlcCpsApiBukkit extends JavaPlugin {
             this.getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
 
             this.getLogger().log(Level.INFO, "Successfully setup BadlionClientCPSAPI plugin.");
-        } catch (IOException e) {
-            this.getLogger().log(Level.SEVERE, "Error with config for BadlionClientCPSAPI plugin.");
-            e.printStackTrace();
+        } catch (Exception ex) {
+            this.getLogger().log(Level.SEVERE, "Error with config for BadlionClientCPSAPI plugin : " + ex.getMessage(), ex);
         }
     }
 
@@ -57,29 +54,48 @@ public class BlcCpsApiBukkit extends JavaPlugin {
 
     }
 
-    public Conf loadConf(File file) throws IOException {
+    private Conf loadConf(File file) {
+        FileReader fileReader = null;
+
         try {
-            Reader reader = new BufferedReader(new FileReader(file));
-            return BlcCpsApiBukkit.GSON_NON_PRETTY.fromJson(reader, Conf.class);
+            fileReader = new FileReader(file);
+            return BlcCpsApiBukkit.GSON_NON_PRETTY.fromJson(fileReader, Conf.class);
         } catch (FileNotFoundException ex) {
             this.getLogger().log(Level.INFO,"No Config Found: Saving default...");
             Conf conf = new Conf();
-            this.saveConf(conf, new File(this.getDataFolder(), "config.json"));
+            this.saveConf(conf, file);
             return conf;
+        } finally {
+            if (fileReader != null) {
+                try {
+                    fileReader.close();
+                } catch (IOException ignored) {
+
+                }
+            }
         }
     }
 
     private void saveConf(Conf conf, File file) {
+        FileWriter fileWriter = null;
+
         try {
-            FileWriter writer = new FileWriter(file);
-            BlcCpsApiBukkit.GSON_PRETTY.toJson(conf, writer);
+            fileWriter = new FileWriter(file);
+            BlcCpsApiBukkit.GSON_PRETTY.toJson(conf, fileWriter);
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            if (fileWriter != null) {
+                try {
+                    fileWriter.close();
+                } catch (IOException ignored) {
+
+                }
+            }
         }
     }
 
     public Conf getConf() {
         return this.conf;
     }
-
 }
