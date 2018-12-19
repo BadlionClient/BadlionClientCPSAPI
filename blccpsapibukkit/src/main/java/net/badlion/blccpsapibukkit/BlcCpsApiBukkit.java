@@ -40,7 +40,7 @@ public class BlcCpsApiBukkit extends JavaPlugin {
             this.conf = loadConf(new File(this.getDataFolder(), "config.json"));
 
             // Register channel
-            this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BLC|M");
+            this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BLC|C");
 
             // Only register the listener if the config loads successfully
             this.getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
