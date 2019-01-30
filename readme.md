@@ -31,7 +31,7 @@ This example config will limit a user to 20 clicks per second (cps) when playing
 
 ```json
 {
-	"clicksPerSecondLimit": 20
+	"clicksPerSecondLimit": 20,
 	"clicksPerSecondLimitRight": 20
 }
 ```
