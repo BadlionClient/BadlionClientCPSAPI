@@ -128,7 +128,7 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
 
         // Create data we need for packet;
-        String channel = "BLC|C";
+        String channel = "badlion:cps";
         byte[] message = BlcCpsApiBukkit.GSON_NON_PRETTY.toJson(this.plugin.getConf()).getBytes();
 
         try {
