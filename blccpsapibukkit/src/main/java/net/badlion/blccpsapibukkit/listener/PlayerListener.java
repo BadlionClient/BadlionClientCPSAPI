@@ -29,6 +29,10 @@ public class PlayerListener implements Listener {
     private Class<?> packetDataSerializerClass;
     private Constructor<?> packetDataSerializerConstructor;
 
+    // Bukkit 1.13+ support
+    private Class<?> minecraftKeyClass;
+    private Constructor<?> minecraftKeyConstructor;
+
 	private Method wrappedBufferMethod;
 
     public PlayerListener(BlcCpsApiBukkit plugin) {
@@ -103,7 +107,22 @@ public class PlayerListener implements Listener {
             // If we made it this far in theory we are on at least 1.8
             this.packetPlayOutCustomPayloadConstructor = this.getConstructor(packetPlayOutCustomPayloadClass, String.class, this.packetDataSerializerClass);
             if (this.packetPlayOutCustomPayloadConstructor == null) {
-                throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor 2x");
+                // Ok we are in 1.13 or higher now...
+                this.minecraftKeyClass = this.getClass("net.minecraft.server." + this.versionSuffix + ".MinecraftKey");
+                if (this.minecraftKeyClass == null) {
+                    throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or MinecraftKey class");
+                }
+
+                this.minecraftKeyConstructor = this.getConstructor(this.minecraftKeyClass, String.class, String.class);
+                if (this.minecraftKeyConstructor == null) {
+                    throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor or MinecraftKey constructor");
+                }
+
+                // If we still can't find this...unknown version
+                this.packetPlayOutCustomPayloadConstructor = this.getConstructor(packetPlayOutCustomPayloadClass, this.minecraftKeyClass, this.packetDataSerializerClass);
+                if (this.packetPlayOutCustomPayloadConstructor == null) {
+                    throw new RuntimeException("Failed to find PacketPlayOutCustomPayload constructor");
+                }
             }
         }
 
@@ -134,13 +153,19 @@ public class PlayerListener implements Listener {
         try {
             Object packet;
 
-            // Newer MC version, setup ByteBuf object
-            if (this.packetDataSerializerClass != null) {
+            // 1.13+
+            if (this.minecraftKeyClass != null) {
+                Object minecraftKey = this.minecraftKeyConstructor.newInstance("badlion", "cps");
+                Object byteBuf = this.wrappedBufferMethod.invoke(null, (Object) message);
+                Object packetDataSerializer = this.packetDataSerializerConstructor.newInstance(byteBuf);
+
+                packet = this.packetPlayOutCustomPayloadConstructor.newInstance(minecraftKey, packetDataSerializer);
+            } else if (this.packetDataSerializerClass != null) { // 1.8+
                 Object byteBuf = this.wrappedBufferMethod.invoke(null, (Object) message);
                 Object packetDataSerializer = this.packetDataSerializerConstructor.newInstance(byteBuf);
 
                 packet = this.packetPlayOutCustomPayloadConstructor.newInstance(channel, packetDataSerializer);
-            } else {
+            } else { // 1.7
                 // Work our magic to make the packet
                 packet = this.packetPlayOutCustomPayloadConstructor.newInstance(channel, message);
             }
