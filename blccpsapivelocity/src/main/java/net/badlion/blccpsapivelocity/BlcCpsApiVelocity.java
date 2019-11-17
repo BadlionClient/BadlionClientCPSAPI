@@ -53,7 +53,7 @@ public final class BlcCpsApiVelocity {
 	    try {
             this.conf = loadConf(new File(dataFolder, "config.json"));
 
-            this.blcCpsChannel = MinecraftChannelIdentifier.create("blc", "cps");
+            this.blcCpsChannel = MinecraftChannelIdentifier.create("badlion", "cps");
 
             // Only register the listener if the config loads successfully
             this.proxy.getEventManager().register(this, new PlayerListener(this));
