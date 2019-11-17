@@ -1,6 +1,6 @@
 # Badlion Client CPS API
 
-This repository explains how to limit the clicks per second (cps) of a Badlion Client user via a simple Bungee/Bukkit plugin.
+This repository explains how to limit the clicks per second (cps) of a Badlion Client user via a simple Velocity/Bungee/Bukkit plugin.
 
 By default there is no limitation to how fast you can click with the Badlion Client.
 
@@ -10,9 +10,9 @@ How to install the Badlion Client CPS API on your server.
 
 #### Quick Installation (for non-programmers)
 
-1. Download **either** the latest bukkit or bungee plugin from our releases (you don't need both, we recommend using the BungeeCord plugin if you are running BungeeCord): https://github.com/BadlionNetwork/BadlionClientCPSAPI/releases
+1. Download **either** the latest bukkit, bungee or velocity plugin from our releases (you don't need both, we recommend using the BungeeCord or Velocity plugin if you are running BungeeCord or Velocity): https://github.com/BadlionNetwork/BadlionClientCPSAPI/releases
 2. Place the downloaded plugin into your `plugins` directory on your server.
-3. Turn on the BungeeCord or Bukkit server and a default config will be automatically made in `plugins/BadlionClientCPSAPI/config.json`
+3. Turn on the Velocity, BungeeCord or Bukkit server and a default config will be automatically made in `plugins/BadlionClientCPSAPI/config.json`
 4. Edit the config as you see fit and reboot the server after you have finished editing the config (see below for more information).
 
 #### Do it yourself (for programmers)
@@ -20,7 +20,7 @@ How to install the Badlion Client CPS API on your server.
 1. Clone this repository
 2. Compile the plugin(s) you want to use (you only need one per Minecraft network).
 2. Place the compiled plugins from the `target` directories into your `plugins` directory on your server.
-3. Turn on the BungeeCord or Bukkit server and a default config will be automatically made in `plugins/BadlionClientCPSAPI/config.json`
+3. Turn on the Velocity, BungeeCord or Bukkit server and a default config will be automatically made in `plugins/BadlionClientCPSAPI/config.json`
 4. Edit the config as you see fit and reboot the server after you have finished editing the config (see below for more information).
 
 ### Example Config
