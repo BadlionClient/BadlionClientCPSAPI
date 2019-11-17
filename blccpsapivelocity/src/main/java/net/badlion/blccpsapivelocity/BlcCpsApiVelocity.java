@@ -24,33 +24,33 @@ import net.badlion.blccpsapivelocity.listener.PlayerListener;
 @Plugin(id = "blccpsapivelocity", name = "BadlionClientCPSAPI", version = "1.0", authors = {"Badlion"})
 public final class BlcCpsApiVelocity {
 
-	public static final Gson GSON_NON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().create();
-	private static final Gson GSON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().setPrettyPrinting().create();
+    public static final Gson GSON_NON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().create();
+    private static final Gson GSON_PRETTY = new GsonBuilder().enableComplexMapKeySerialization().disableHtmlEscaping().setPrettyPrinting().create();
 
-	private final ProxyServer proxy;
-	private final Logger logger;
-	private final Path dataFolderPath;
-	private Conf conf;
-	private MinecraftChannelIdentifier blcCpsChannel;
+    private final ProxyServer proxy;
+    private final Logger logger;
+    private final Path dataFolderPath;
+    private Conf conf;
+    private MinecraftChannelIdentifier blcCpsChannel;
 
-	@Inject
+    @Inject
     public BlcCpsApiVelocity(ProxyServer proxy, Logger logger, @DataDirectory Path dataFolderPath) {
         this.proxy = proxy;
         this.logger = logger;
         this.dataFolderPath = dataFolderPath;
     }
 
-	@Subscribe
-	public void onProxyInitialize(ProxyInitializeEvent event) {
-	    final File dataFolder = this.dataFolderPath.toFile();
-	    
-	    if (!dataFolder.exists()) {
+    @Subscribe
+    public void onProxyInitialize(ProxyInitializeEvent event) {
+        final File dataFolder = this.dataFolderPath.toFile();
+        
+        if (!dataFolder.exists()) {
             if (!dataFolder.mkdir()) {
                 this.logger.error("Failed to create plugin directory.");
             }
         }
-	    
-	    try {
+        
+        try {
             this.conf = loadConf(new File(dataFolder, "config.json"));
 
             this.blcCpsChannel = MinecraftChannelIdentifier.create("badlion", "cps");
@@ -63,34 +63,34 @@ public final class BlcCpsApiVelocity {
             this.logger.error("Error with config for BadlionClientCPSAPI plugin.");
             e.printStackTrace();
         }
-	}
+    }
 
-	private Conf loadConf(File file) throws IOException {
+    private Conf loadConf(File file) throws IOException {
 
-		try (FileReader fileReader = new FileReader(file)) {
-			return BlcCpsApiVelocity.GSON_NON_PRETTY.fromJson(fileReader, Conf.class);
-		} catch (FileNotFoundException ex) {
-			this.logger.info("No Config Found: Saving default...");
-			Conf conf = new Conf();
-			this.saveConf(conf, file);
-			return conf;
-		}
-	}
+        try (FileReader fileReader = new FileReader(file)) {
+            return BlcCpsApiVelocity.GSON_NON_PRETTY.fromJson(fileReader, Conf.class);
+        } catch (FileNotFoundException ex) {
+            this.logger.info("No Config Found: Saving default...");
+            Conf conf = new Conf();
+            this.saveConf(conf, file);
+            return conf;
+        }
+    }
 
-	private void saveConf(Conf conf, File file) {
+    private void saveConf(Conf conf, File file) {
 
-		try (FileWriter fileWriter = new FileWriter(file)) {
-			BlcCpsApiVelocity.GSON_PRETTY.toJson(conf, fileWriter);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            BlcCpsApiVelocity.GSON_PRETTY.toJson(conf, fileWriter);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
-	public Conf getConf() {
-		return this.conf;
-	}
+    public Conf getConf() {
+        return this.conf;
+    }
 
-	public MinecraftChannelIdentifier getBlcCpsChannel() {
-	    return this.blcCpsChannel;
-	}
+    public MinecraftChannelIdentifier getBlcCpsChannel() {
+        return this.blcCpsChannel;
+    }
 }
