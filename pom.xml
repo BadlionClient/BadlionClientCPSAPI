@@ -11,6 +11,7 @@
     <version>1.2.1</version>
 
     <modules>
+        <module>blccpsapivelocity</module>
         <module>blccpsapibungee</module>
         <module>blccpsapibukkit</module>
     </modules>
